@@ -15,12 +15,12 @@ document.addEventListener("DOMContentLoaded", function() {
         let li = document.createElement('li')
         li.innerText = book.title
         document.querySelector('#list').append(li)
-        li.addEventListener('click', (e) => {
-            clickDisplayDetails(e, book.img_url, book.title, book.subtitle, book.author, book.description, book.users, book.id)
+        li.addEventListener('click', () => {
+            clickDisplayDetails(book.img_url, book.title, book.subtitle, book.author, book.description, book.users, book.id)
         })
     }
 
-    function clickDisplayDetails(event, image, title, subtitle, author, description, usersLike, bookId){
+    function clickDisplayDetails(image, title, subtitle, author, description, usersLike, bookId){
         document.querySelector('#show-panel').innerHTML = ''
         let img = document.createElement('img')
         img.src = image
@@ -45,14 +45,15 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function listOutLikers(likers) {
-        let ul = document.createElement('ul')
+      let ul = document.createElement('ul')
         ul.innerHTML=''
         likers.forEach((users) => {
+            
             let li = document.createElement('li')
             li.innerText = users.username
             ul.append(li)
         })
-
+        
         document.querySelector('#show-panel').append(ul)
     }
 
@@ -66,28 +67,32 @@ document.addEventListener("DOMContentLoaded", function() {
             //console.log(listOfUsers)
             let totalIdList = findNextUser(listOfUsers, "id")
             let totalUserList = findNextUser(listOfUsers, "username")
-            
+            //console.log(users)
             //removes the current number of id from total list and find minimum id
             let filteredArray = totalIdList.filter(function(x){
                 return idList.indexOf(x)<0;
             })
             let minLike = Math.min.apply(Math, filteredArray)
-            console.log(minLike)
+            //console.log(minLike)
 
-            fetch(`http://localhost:3000/books/${bookId}/users`, {
+            //console.log(totalUserList[minLike-1])
+
+            let userObj = {id: minLike, username: totalUserList[minLike-1]}
+            users.push(userObj) //add to current users the new object to pass in patch
+            fetch(`http://localhost:3000/books/${bookId}`, {
                 method: 'PATCH',
                 headers: {
                   'Content-Type': 'application/json'
                 },
                 body:JSON.stringify({
-                  id: minLike,
-                  username: totalUserList[minLike]
+                  users: users 
                 }) 
               })
               .then(resp => resp.json())
-              .then(data => console.log(data))
+              .then(function(data) {
+                clickDisplayDetails(data.img_url, data.title, data.subtitle, data.author, data.description, data.users, data.id)
+              })
         })
-        
     }
 
     function findNextUser(obj, prop) {
